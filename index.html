@@ -722,7 +722,7 @@ Ordená de mayor a menor. Punto como separador decimal.`);
 }
 
 // ── Cambiá esta URL por la de tu Cloudflare Worker ──
-const PROXY_URL = 'https://TU-WORKER.workers.dev/api/visa';
+const PROXY_URL = 'https://proxy-visa.ignacio-fae.workers.dev/api/visa';
 
 async function callVisaAPI(b64, prompt){
   if(PROXY_URL.includes('TU-WORKER')){

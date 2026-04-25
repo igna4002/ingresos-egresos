@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Financiero</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root{
+  --bg:#0f1117;--bg2:#171b26;--bg3:#1e2333;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);
+  --text:#f0f2f8;--text2:#8b90a8;--text3:#565c78;
+  --accent:#4f8ef7;--accent2:#3ecfa8;
+  --danger:#f7514f;--green:#3ecfa8;--warn:#f7a24f;
+  --c1:#4f8ef7;--c2:#3ecfa8;--c3:#f7a24f;--c4:#e96caa;--c5:#a78bf7;
+  --r:14px;--rs:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* HEADER */
+.header{display:flex;align-items:center;justify-content:space-between;padding:1.25rem 2rem;border-bottom:1px solid var(--border);background:var(--bg2);position:sticky;top:0;z-index:100}
+.hlogo{display:flex;align-items:center;gap:10px}
+.hicon{width:34px;height:34px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:9px;display:flex;align-items:center;justify-content:center}
+.hicon svg{width:18px;height:18px;fill:white}
+.hlogo h2{font-size:15px;font-weight:600}
+.hlogo small{font-size:12px;color:var(--text2);display:block}
+.hright{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.mbadge{font-size:12px;font-weight:500;background:var(--bg3);border:1px solid var(--border2);padding:4px 10px;border-radius:20px;color:var(--text2);display:flex;align-items:center;gap:4px}
+.mbadge select{background:transparent;border:none;color:var(--text2);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;outline:none;cursor:pointer}
+.mbadge input{background:transparent;border:none;color:var(--text2);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;outline:none;width:44px}
+.hbtn{font-size:12px;font-weight:500;border:none;padding:7px 16px;border-radius:20px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:opacity .2s}
+.hbtn:hover{opacity:.85}
+.hbtn.blue{background:var(--accent);color:white}
+.hbtn.green{background:#3ecfa8;color:#0f1117}
+
+/* MAIN */
+.main{padding:2rem;max-width:1300px;margin:0 auto}
+
+/* KPIs */
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:1.75rem}
+.kpi{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:1.5rem 1.75rem;position:relative;overflow:hidden;animation:fadeUp .4s ease both}
+.kpi:nth-child(1){animation-delay:.05s}.kpi:nth-child(2){animation-delay:.1s}.kpi:nth-child(3){animation-delay:.15s}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:var(--r) var(--r) 0 0}
+.kpi.ing::before{background:linear-gradient(90deg,var(--c1),var(--c2))}
+.kpi.gas::before{background:linear-gradient(90deg,var(--danger),#c0392b)}
+.kpi.aho::before{background:linear-gradient(90deg,var(--c2),var(--accent2))}
+.kpi-lbl{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:10px}
+.kpi-val{font-size:28px;font-weight:300;font-family:'DM Mono',monospace;letter-spacing:-.02em}
+.kpi-val.pos{color:var(--green)}.kpi-val.neg{color:var(--danger)}
+.kpi-sub{font-size:11px;color:var(--text3);margin-top:6px}
+
+/* GRID 2 col */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem}
+.panel{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:1.5rem;animation:fadeUp .5s ease both;animation-delay:.2s}
+.ptitle{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:1.25rem;display:flex;align-items:center;justify-content:space-between}
+.ptitle span{font-size:11px;color:var(--text3);font-weight:400;text-transform:none;letter-spacing:0}
+
+/* DONUT */
+.donut-wrap{display:flex;align-items:center;gap:1.5rem}
+.donut-cw{position:relative;width:180px;height:180px;flex-shrink:0}
+.donut-mid{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none}
+.donut-mid-val{font-size:14px;font-weight:500;font-family:'DM Mono',monospace;color:var(--text)}
+.donut-mid-lbl{font-size:10px;color:var(--text3);margin-top:2px}
+.dlegend{flex:1;display:flex;flex-direction:column;gap:10px}
+.dleg{display:flex;align-items:center;gap:8px}
+.ddot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.dname{font-size:12px;color:var(--text2);flex:1}
+.dpct{font-size:11px;font-weight:500;font-family:'DM Mono',monospace;color:var(--text)}
+.dval{font-size:10px;color:var(--text3);font-family:'DM Mono',monospace}
+
+/* PANEL genérico con padding */
+.fpanel{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:1.5rem;margin-bottom:1.5rem;animation:fadeUp .5s ease both;animation-delay:.25s}
+
+/* GASTOS LIST — misma estructura que las barras */
+.grow{display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);padding:6px 0}
+.grow:last-child{border-bottom:none}
+.grow.paid .glabel{color:var(--text3);text-decoration:line-through}
+.grow.paid input.ginp{opacity:.45;pointer-events:none;cursor:not-allowed}
+.glabel{font-size:11px;color:var(--text3);width:150px;text-align:right;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;user-select:none;pointer-events:none;cursor:default}
+.gbar-out{display:none}
+.gbar-in{display:none}
+.gpct{display:none}
+.grow > span[style*="flex:1"]{pointer-events:none;user-select:none}
+input.ginp{width:130px;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:4px 8px;font-size:12px;font-family:'DM Mono',monospace;color:var(--text);text-align:right;outline:none;transition:border-color .2s;flex-shrink:0}
+input.ginp:focus{border-color:var(--accent)}
+.gcheck{display:flex;align-items:center;justify-content:center;width:34px;flex-shrink:0;cursor:pointer}
+.chk{width:18px;height:18px;border-radius:5px;border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;transition:all .2s;background:var(--bg3)}
+.chk.done{background:#3ecfa8;border-color:#3ecfa8}
+.chk svg{display:none;width:11px;height:11px}
+.chk.done svg{display:block}
+
+/* CBU inline */
+.gcbu{padding:5px 0 8px 160px;border-bottom:1px solid var(--border);background:rgba(255,255,255,.01)}
+.gcbu-inner{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.gcbu-num{font-family:'DM Mono',monospace;font-size:11px;color:var(--accent);letter-spacing:.02em}
+.gcbu-copy{font-family:'DM Sans',sans-serif;font-size:10px;font-weight:500;background:var(--accent);color:#0f1117;border:none;padding:2px 9px;border-radius:10px;cursor:pointer}
+.gcbu-nota{display:flex;align-items:center;gap:5px;background:rgba(247,162,79,.08);border:1px solid rgba(247,162,79,.2);border-radius:6px;padding:4px 8px;margin-top:5px}
+.gcbu-nota svg{width:11px;height:11px;fill:#f7a24f;flex-shrink:0}
+.gcbu-nota span{font-size:10px;color:#f7a24f;line-height:1.5}
+.gcbu-nota strong{font-weight:600;color:#f7c06e}
+
+/* footer gastos */
+.gfoot{margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.gfoot-lbl{font-size:12px;color:var(--text3);font-weight:500;text-transform:uppercase;letter-spacing:.07em}
+.gfoot-val{font-size:20px;font-weight:300;font-family:'DM Mono',monospace;color:var(--danger)}
+.gfoot-sub{font-size:11px;color:var(--green);font-family:'DM Mono',monospace}
+
+/* BARRAS comparativas */
+.bpanel{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:1.5rem;margin-bottom:1.5rem;animation:fadeUp .5s ease both;animation-delay:.3s}
+.bcrow{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.bcrow:last-child{margin-bottom:0}
+.bclbl{font-size:11px;color:var(--text3);width:150px;text-align:right;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bcout{flex:1;height:20px;background:rgba(255,255,255,.04);border-radius:4px;overflow:hidden}
+.bcin{height:100%;border-radius:4px;transition:width .5s cubic-bezier(.4,0,.2,1);min-width:0}
+.bcpct{font-size:11px;font-family:'DM Mono',monospace;color:var(--text3);width:44px;text-align:right;flex-shrink:0}
+.bcamt{font-size:11px;font-family:'DM Mono',monospace;color:var(--text2);width:120px;text-align:right;flex-shrink:0}
+.bcpaid{font-size:11px;color:#3ecfa8;width:16px;text-align:center;flex-shrink:0}
+
+@keyframes spin{to{transform:rotate(360deg)}}
+footer{text-align:center;padding:1.5rem 2rem;font-size:11px;color:var(--text3);border-top:1px solid var(--border)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:860px){.kpis,.grid2{grid-template-columns:1fr}.donut-wrap{flex-direction:column}.main{padding:1rem}}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="hlogo">
+    <div><h2>Ingresos y Gastos</h2><small>Ignacio A. Pringles</small></div>
+  </div>
+  <div class="hright">
+    <div class="mbadge">
+      <select id="sel-mes" onchange="saveMes()"></select>
+      <input id="sel-anio" type="number" min="2020" max="2099" onchange="saveMes()">
+    </div>
+    <button class="hbtn green" onclick="exportCSV()">↓ Google Sheets</button>
+    <button class="hbtn blue" id="savebtn" onclick="saveData()">Guardar</button>
+  </div>
+</header>
+
+<main class="main">
+
+  <!-- KPIs -->
+  <div class="kpis">
+    <div class="kpi ing">
+      <div class="kpi-lbl">Ingresos netos</div>
+      <div class="kpi-val" id="kpi-ing">$0</div>
+      <div class="kpi-sub">Cooperativa + Personas + ART + Otros + Retiro</div>
+    </div>
+    <div class="kpi gas">
+      <div class="kpi-lbl">Gastos del mes</div>
+      <div class="kpi-val neg" id="kpi-gas">$0</div>
+      <div class="kpi-sub">Total de egresos registrados</div>
+    </div>
+    <div class="kpi aho">
+      <div class="kpi-lbl">Ahorro neto</div>
+      <div class="kpi-val" id="kpi-ahorro">$0</div>
+      <div class="kpi-sub">Ingresos − Gastos</div>
+    </div>
+  </div>
+
+  <!-- DONUT + PROGRESO -->
+  <div class="grid2">
+    <div class="panel">
+      <div class="ptitle">Distribución de ingresos <span>% del total neto</span></div>
+      <div class="donut-wrap">
+        <div class="donut-cw">
+          <canvas id="donutChart" role="img" aria-label="Distribución de ingresos"></canvas>
+          <div class="donut-mid">
+            <div class="donut-mid-val" id="donut-total">$0</div>
+            <div class="donut-mid-lbl">total neto</div>
+          </div>
+        </div>
+        <div class="dlegend" id="donut-legend"></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="ptitle">Progreso de pagos <span id="prog-text">0 / 0 pagados</span></div>
+      <div style="height:6px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden;margin-bottom:1rem">
+        <div id="prog-bar" style="height:100%;background:linear-gradient(90deg,#3ecfa8,#4f8ef7);border-radius:3px;transition:width .5s ease;width:0%"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div style="background:var(--bg3);border-radius:var(--rs);padding:14px">
+          <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px">Pagado</div>
+          <div style="font-size:20px;font-weight:300;font-family:'DM Mono',monospace;color:#3ecfa8" id="prog-paid">$0</div>
+        </div>
+        <div style="background:var(--bg3);border-radius:var(--rs);padding:14px">
+          <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px">Pendiente</div>
+          <div style="font-size:20px;font-weight:300;font-family:'DM Mono',monospace;color:var(--warn)" id="prog-pend">$0</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- INGRESOS -->
+  <div class="fpanel">
+    <div class="ptitle" style="margin-bottom:1rem">
+      Ingresos del mes
+      <span>ingresá los valores base · las retenciones se calculan solas</span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px" id="ing-inputs"></div>
+    <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border);display:grid;grid-template-columns:repeat(5,1fr);gap:10px" id="ing-results"></div>
+  </div>
+
+  <!-- GASTOS LIST -->
+  <div class="fpanel">
+    <div class="ptitle" style="margin-bottom:.75rem">
+      Gastos del mes
+      <span>de mayor a menor · tildá para marcar pagado</span>
+    </div>
+    <table style="width:100%;border-collapse:collapse">
+      <thead>
+        <tr>
+          <th style="font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);text-align:left;padding:0 0 8px 0;border-bottom:1px solid var(--border2)">Concepto</th>
+          <th style="font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);text-align:right;padding:0 0 8px 12px;border-bottom:1px solid var(--border2);width:150px">Importe</th>
+          <th style="font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);text-align:center;padding:0 0 8px 12px;border-bottom:1px solid var(--border2);width:40px">OK</th>
+        </tr>
+      </thead>
+      <tbody id="gastos-list"></tbody>
+    </table>
+    <div class="gfoot">
+      <span class="gfoot-lbl">Total gastos</span>
+      <div style="text-align:right">
+        <div class="gfoot-val" id="gfoot-tot">$0</div>
+        <div class="gfoot-sub" id="gfoot-paid"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BARRAS COMPARATIVAS -->
+  <div class="bpanel">
+    <div class="ptitle" style="margin-bottom:1rem">Comparativa de gastos</div>
+    <div id="bars-chart"></div>
+  </div>
+
+  <!-- VISA PDF ANALYZER -->
+  <div class="fpanel" id="visa-section">
+    <div class="ptitle" style="margin-bottom:1rem">
+      Resumen Visa Santander
+      <span>subí el PDF · la IA analiza pesos y dólares por separado</span>
+    </div>
+
+    <!-- Drop zone único -->
+    <div id="visa-dropzone"
+      onclick="document.getElementById('visa-file-input').click()"
+      ondragover="event.preventDefault();this.style.borderColor='var(--accent)'"
+      ondragleave="this.style.borderColor=''"
+      ondrop="event.preventDefault();this.style.borderColor='';handleVisaFile(event.dataTransfer.files[0])"
+      style="border:2px dashed var(--border2);border-radius:var(--r);padding:1.75rem 2rem;text-align:center;cursor:pointer;transition:border-color .2s;margin-bottom:1rem">
+      <div style="font-size:24px;margin-bottom:8px">📄</div>
+      <div style="font-size:13px;color:var(--text2);font-weight:500" id="visa-filename">Arrastrá el PDF acá o hacé click para seleccionarlo</div>
+      <div style="font-size:11px;color:var(--text3);margin-top:4px">El mismo archivo — la IA separa gastos en $ pesos y U$S dólares</div>
+      <input type="file" id="visa-file-input" accept=".pdf" style="display:none" onchange="handleVisaFile(this.files[0])">
+    </div>
+
+    <!-- Status -->
+    <div id="visa-status" style="display:none;align-items:center;gap:10px;padding:12px 16px;background:var(--bg3);border-radius:var(--rs);margin-bottom:1rem;font-size:13px;color:var(--text2)">
+      <div style="width:14px;height:14px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0"></div>
+      <span id="visa-status-txt">Analizando...</span>
+    </div>
+
+    <!-- PESOS -->
+    <div id="visa-result-ars" style="display:none;margin-bottom:1.5rem">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.6rem">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--accent)">Gastos en pesos</span>
+        </div>
+        <span id="visa-total-ars" style="font-size:13px;color:var(--text);font-family:'DM Mono',monospace;font-weight:500"></span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border2);padding-bottom:4px;margin-bottom:2px">
+        <div style="flex:1;font-size:9px;text-align:left;color:var(--text3);text-transform:uppercase;letter-spacing:.04em">Concepto</div>
+        <div style="width:80px;flex-shrink:0"></div>
+        <div style="width:34px;font-size:9px;color:var(--text3);text-transform:uppercase;text-align:right;flex-shrink:0">%</div>
+        <div style="width:28px;font-size:9px;color:var(--text3);text-transform:uppercase;text-align:center;flex-shrink:0">Cant</div>
+        <div style="width:110px;font-size:9px;color:var(--text3);text-transform:uppercase;text-align:right;flex-shrink:0">Total</div>
+      </div>
+      <div id="visa-rows-ars"></div>
+    </div>
+
+    <!-- DÓLARES -->
+    <div id="visa-result-usd" style="display:none">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.6rem">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:#3ecfa8">Gastos en dólares</span>
+        </div>
+        <span id="visa-total-usd" style="font-size:13px;color:#3ecfa8;font-family:'DM Mono',monospace;font-weight:500"></span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border2);padding-bottom:4px;margin-bottom:2px">
+        <div style="flex:1;font-size:9px;text-align:left;color:var(--text3);text-transform:uppercase;letter-spacing:.04em">Concepto</div>
+        <div style="width:80px;flex-shrink:0"></div>
+        <div style="width:34px;font-size:9px;color:var(--text3);text-transform:uppercase;text-align:right;flex-shrink:0">%</div>
+        <div style="width:28px;font-size:9px;color:var(--text3);text-transform:uppercase;text-align:center;flex-shrink:0">Cant</div>
+        <div style="width:110px;font-size:9px;color:var(--text3);text-transform:uppercase;text-align:right;flex-shrink:0">Total</div>
+      </div>
+      <div id="visa-rows-usd"></div>
+    </div>
+
+    <div id="visa-error" style="display:none;font-size:12px;color:var(--danger);padding:10px 14px;background:rgba(247,81,79,.08);border:1px solid rgba(247,81,79,.2);border-radius:var(--rs)"></div>
+  </div>
+</main>
+
+<footer>Ingresos y Gastos · Ignacio A. Pringles</footer>
+
+<script>
+/* ── DATOS ── */
+const COLS  = ['Cooperativa','Personas','ART','Otros','Retiro'];
+const COLORS= ['#4f8ef7','#3ecfa8','#f7a24f','#e96caa','#a78bf7'];
+const GC    = ['#4f8ef7','#3ecfa8','#f7a24f','#e96caa','#a78bf7',
+               '#4f8ef7','#3ecfa8','#f7a24f','#e96caa','#a78bf7',
+               '#4f8ef7','#3ecfa8','#f7a24f','#e96caa','#a78bf7',
+               '#4f8ef7','#3ecfa8'];
+const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
+               'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const CBU_INFO = {
+  'CP Laura': {cbu:'0720718388000035332640', nota:'Colocar <strong>HONORARIOS</strong> en el concepto', color:'#4f8ef7'},
+  'TAOS':     {cbu:'0170081740000054431157', nota:'Pago del auto', color:'#3ecfa8'}
+};
+const GD_DEFAULT = [
+  {label:'VISA Santander',    val:3900000,  paid:false},
+  {label:'Well Fargo',        val:0,        paid:false},
+  {label:'Sueldo Patricia',   val:141488,   paid:false},
+  {label:'Pago Andrés García',val:225000,   paid:false},
+  {label:'Subproductores',    val:1700000,  paid:false},
+  {label:'Celular',           val:79012,    paid:false},
+  {label:'IVA',               val:1350000,  paid:false},
+  {label:'Ganancias',         val:0,        paid:false},
+  {label:'Anticipo Ganancias',val:0,        paid:false},
+  {label:'Expensas Cochera',  val:78688,    paid:false},
+  {label:'Expensas Pasillo',  val:9400,     paid:false},
+  {label:'CP Laura',          val:104000,   paid:false},
+  {label:'Santander',         val:0,        paid:false},
+  {label:'ART Patricia',      val:8885,     paid:false},
+  {label:'TAOS',              val:1231850,  paid:false},
+  {label:'Cesar U$S 400',     val:650000,   paid:false},
+  {label:'Extra PATO',        val:70000,    paid:false}
+];
+const BV_DEFAULT = [15925223, 1381236, 4500000, 0, 16058];
+
+/* ── ESTADO ── */
+let gastos = JSON.parse(localStorage.getItem('gastos') || 'null') || GD_DEFAULT.map(g=>({...g}));
+let bv     = JSON.parse(localStorage.getItem('bases')  || 'null') || [...BV_DEFAULT];
+let dc     = null;
+
+/* ── UTILS ── */
+const fmtN  = n => Math.abs(n).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmt   = n => '$' + fmtN(n);
+const fmts  = n => !n ? '—' : n<0 ? '($'+fmtN(n)+')' : '$'+fmtN(n);
+const parse = v => parseFloat(String(v).replace(/\./g,'').replace(',','.')) || 0;
+const fmtI  = v => { const n=parse(v); return n===0?'0,00':n.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2}); };
+
+/* ── MES/AÑO ── */
+(function(){
+  const d = new Date();
+  const saved = JSON.parse(localStorage.getItem('mesFecha')||'null');
+  const mes  = saved ? saved.mes  : d.getMonth();
+  const anio = saved ? saved.anio : d.getFullYear();
+  const sel = document.getElementById('sel-mes');
+  MESES.forEach((m,i)=>{ const o=document.createElement('option'); o.value=i; o.textContent=m; if(i===mes) o.selected=true; sel.appendChild(o); });
+  document.getElementById('sel-anio').value = anio;
+})();
+function saveMes(){
+  const mes  = parseInt(document.getElementById('sel-mes').value);
+  const anio = parseInt(document.getElementById('sel-anio').value) || new Date().getFullYear();
+  localStorage.setItem('mesFecha', JSON.stringify({mes, anio}));
+}
+function getMesLabel(){
+  return MESES[parseInt(document.getElementById('sel-mes').value)] + ' ' + document.getElementById('sel-anio').value;
+}
+
+/* ── INGRESOS BLOCK ── */
+const ING_COLS = ['Cooperativa','Personas','ART','Otros','Retiro'];
+const ING_ROWS = [
+  {id:'iva',    label:'IVA (21%)',           fn:(b,c)=>c<3?b*.21:0},
+  {id:'retiva', label:'Ret. IVA (16.8%)',    fn:(b,c)=>c===0?-b*.168:0},
+  {id:'retgan', label:'Ret. Ganancias',      fn:(b,c)=>c===2?-1500:0},
+  {id:'ib',     label:'Ing. Brutos (5%)',    fn:(b,c)=>c<3?-b*.05:0},
+  {id:'ss',     label:'Ser. Sociales (1%)',  fn:(b,c)=>c<3?-b*.01:0},
+  {id:'esp',    label:'Especialidad 15 (5%)',fn:(b,c)=>c<3?-b*.05:0},
+];
+
+function buildIngBlock(){
+  const inp = document.getElementById('ing-inputs');
+  inp.innerHTML = ING_COLS.map((col,c)=>`
+    <div>
+      <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;display:flex;align-items:center;gap:5px">
+        <span style="width:7px;height:7px;border-radius:50%;background:${COLORS[c]};display:inline-block;flex-shrink:0"></span>${col}
+      </div>
+      <input class="iinp" id="bv${c}" value="${fmtI(bv[c])}"
+        oninput="onBV(${c},this.value)"
+        onblur="if(this.value.trim()===''){this.value=fmtI(bv[${c}])}else{bv[${c}]=parse(this.value);this.value=fmtI(this.value);updIngResults();updStats();updBars()}"
+        style="width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:6px 8px;font-size:13px;font-family:'DM Mono',monospace;color:var(--text);text-align:right;outline:none;transition:border-color .2s"
+        onfocus="this.select()" onblur2="this.style.borderColor=''">
+    </div>`).join('');
+  updIngResults();
+}
+
+function updIngResults(){
+  const res = document.getElementById('ing-results');
+  res.innerHTML = ING_COLS.map((col,c)=>{
+    const b = bv[c];
+    const lines = ING_ROWS.map(r=>{
+      const v = r.fn(b,c);
+      if(!v) return '';
+      return `<div style="display:flex;justify-content:space-between;gap:4px;font-size:11px;padding:2px 0;border-bottom:1px solid var(--border)">
+        <span style="color:var(--text3)">${r.label}</span>
+        <span style="font-family:'DM Mono',monospace;color:${v<0?'var(--danger)':'var(--text2)'}">${fmts(v)}</span>
+      </div>`;
+    }).filter(Boolean).join('');
+    const net = calcIngTotals()[c];
+    return `<div>
+      ${lines}
+      <div style="display:flex;justify-content:space-between;gap:4px;font-size:12px;padding:6px 0 0;font-weight:500">
+        <span style="color:var(--text3)">Neto</span>
+        <span style="font-family:'DM Mono',monospace;color:var(--text)">${fmt(net)}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function onBV(c,v){ bv[c]=parse(v); updIngResults(); updStats(); updBars(); }
+
+
+function calcIngTotals(){
+  return bv.map((b,c)=>{
+    const iva    = c<3 ? b*.21    : 0;
+    const retiva = c===0? -b*.168 : 0;
+    const retgan = c===2? -1500   : 0;
+    const ib     = c<3 ? -b*.05   : 0;
+    const ss     = c<3 ? -b*.01   : 0;
+    const esp    = c<3 ? -b*.05   : 0;
+    return b+iva+retiva+retgan+ib+ss+esp;
+  });
+}
+
+/* ── DONUT ── */
+function updDonut(tots){
+  const vals = tots.map(v=>Math.max(0,v));
+  const tot  = vals.reduce((a,b)=>a+b,0)||1;
+  document.getElementById('donut-total').textContent = '$'+Math.round(tot/1000000).toLocaleString('es-AR')+'M';
+  document.getElementById('donut-legend').innerHTML = COLS.map((c,i)=>{
+    const p = Math.round(vals[i]/tot*100);
+    return `<div class="dleg"><span class="ddot" style="background:${COLORS[i]}"></span><span class="dname">${c}</span><span class="dpct">${p}%</span><span class="dval">&nbsp;${fmt(tots[i])}</span></div>`;
+  }).join('');
+  if(dc){ dc.data.datasets[0].data=vals; dc.update('none'); return; }
+  dc = new Chart(document.getElementById('donutChart'),{
+    type:'doughnut',
+    data:{labels:COLS, datasets:[{data:vals, backgroundColor:COLORS, borderWidth:3, borderColor:'#171b26', hoverOffset:8}]},
+    options:{responsive:true, maintainAspectRatio:true, cutout:'70%',
+      plugins:{legend:{display:false}, tooltip:{callbacks:{label(ctx){
+        const t=ctx.dataset.data.reduce((a,b)=>a+b,0)||1;
+        return ' '+ctx.label+': '+fmt(ctx.parsed)+' ('+Math.round(ctx.parsed/t*100)+'%)';
+      }}}}}
+  });
+}
+
+/* ── GASTOS LIST ── */
+function buildGastosList(){
+  const tbody = document.getElementById('gastos-list');
+  const tot   = gastos.reduce((a,b)=>a+b.val,0)||1;
+  const order = [...gastos.keys()].sort((a,b)=>gastos[b].val-gastos[a].val);
+  tbody.innerHTML = '';
+  order.forEach(i=>{
+    const g    = gastos[i];
+    const info = CBU_INFO[g.label];
+
+    // fila principal — concepto como <td> de solo texto, importe como <td> con input
+    const tr = document.createElement('tr');
+    tr.style.cssText = g.paid ? 'opacity:.6' : '';
+
+    // TD concepto: texto puro, no editable
+    const tdLabel = document.createElement('td');
+    tdLabel.style.cssText = 'padding:7px 0;font-size:13px;color:'+(g.paid?'var(--text3)':'var(--text2)')+';'+(g.paid?'text-decoration:line-through;':'')+'border-bottom:1px solid var(--border);user-select:none;pointer-events:none';
+    tdLabel.textContent = g.label;
+
+    // TD importe: solo el input numérico
+    const tdInput = document.createElement('td');
+    tdInput.style.cssText = 'padding:7px 0 7px 12px;border-bottom:1px solid var(--border);text-align:right';
+    const inp = document.createElement('input');
+    inp.type = 'text';
+    inp.inputMode = 'decimal';
+    inp.value = fmtI(g.val);
+    inp.disabled = g.paid;
+    inp.style.cssText = 'width:140px;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:4px 8px;font-size:12px;font-family:"DM Mono",monospace;color:var(--text);text-align:right;outline:none;transition:border-color .2s';
+    inp.addEventListener('focus', function(){ this.select(); this.style.borderColor='var(--accent)'; });
+    inp.addEventListener('blur',  function(){
+      this.style.borderColor='';
+      const n = parse(this.value);
+      if(this.value.trim() === ''){ this.value = fmtI(gastos[i].val); return; }
+      gastos[i].val = n;
+      this.value = fmtI(n);
+      updateAll();
+    });
+    tdInput.appendChild(inp);
+
+    // TD checkbox
+    const tdChk = document.createElement('td');
+    tdChk.style.cssText = 'padding:7px 0 7px 12px;border-bottom:1px solid var(--border);text-align:center;width:40px';
+    tdChk.innerHTML = `<div class="gcheck" onclick="togglePaid(${i})" title="${g.paid?'Desmarcar':'Marcar como pagado'}"><div class="chk${g.paid?' done':''}"><svg viewBox="0 0 12 12" fill="none"><polyline points="1.5,6 4.5,9 10.5,3" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>`;
+
+    tr.appendChild(tdLabel);
+    tr.appendChild(tdInput);
+    tr.appendChild(tdChk);
+    tbody.appendChild(tr);
+
+    // fila CBU si aplica — ocupa toda la fila
+    if(info){
+      const trCbu = document.createElement('tr');
+      const tdCbu = document.createElement('td');
+      tdCbu.colSpan = 3;
+      tdCbu.className = 'gcbu';
+      tdCbu.style.cssText = 'padding:5px 0 8px 16px;border-bottom:1px solid var(--border)';
+      tdCbu.innerHTML = `<div class="gcbu-inner"><span class="gcbu-num" id="gcbu${i}">${info.cbu}</span><button class="gcbu-copy" onclick="copiarCBU('gcbu${i}',this)">Copiar CBU</button></div>${info.nota?`<div class="gcbu-nota"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg><span>${info.nota}</span></div>`:''}`;
+      trCbu.appendChild(tdCbu);
+      tbody.appendChild(trCbu);
+    }
+  });
+}
+
+function onGC(i,v){ const n=parse(v); gastos[i].val=n; updateAll(); }
+function togglePaid(i){ gastos[i].paid=!gastos[i].paid; saveData(true); buildGastosList(); updStats(); }
+
+/* ── BARRAS COMPARATIVAS ── */
+function updBars(){
+  const sorted = [...gastos].filter(g=>g.val>0).sort((a,b)=>b.val-a.val);
+  const max    = sorted[0]?.val||1;
+  const tot    = gastos.reduce((a,b)=>a+b.val,0)||1;
+  document.getElementById('bars-chart').innerHTML = sorted.length
+    ? sorted.map(g=>{
+        const barW = (g.val/max*100).toFixed(1);
+        const pct  = (g.val/tot*100).toFixed(1);
+        return `<div class="bcrow">
+          <span class="bclbl">${g.label}</span>
+          <div class="bcout"><div class="bcin" style="background:${GC[gastos.indexOf(g)]};width:${barW}%;${g.paid?'opacity:.45':''}"></div></div>
+          <span class="bcpct">${pct}%</span>
+          <span class="bcamt">${fmt(g.val)}</span>
+          <span class="bcpaid">${g.paid?'✓':''}</span>
+        </div>`;
+      }).join('')
+    : '<p style="font-size:12px;color:var(--text3)">No hay gastos cargados.</p>';
+}
+
+/* ── STATS (progreso + KPIs) ── */
+function updStats(){
+  const tots    = calcIngTotals();
+  const ing     = tots.reduce((a,b)=>a+b,0);
+  const tot     = gastos.reduce((a,b)=>a+b.val,0);
+  const paidTot = gastos.filter(g=>g.paid).reduce((a,b)=>a+b.val,0);
+  const pendTot = tot - paidTot;
+  const paidN   = gastos.filter(g=>g.paid).length;
+  const pctPaid = tot>0 ? Math.round(paidTot/tot*100) : 0;
+
+  document.getElementById('kpi-ing').textContent    = fmt(ing);
+  document.getElementById('kpi-gas').textContent    = fmt(tot);
+  document.getElementById('kpi-ahorro').textContent = (ing-tot<0?'−':'')+fmt(ing-tot);
+  document.getElementById('kpi-ahorro').className   = 'kpi-val '+(ing-tot>=0?'pos':'neg');
+
+  document.getElementById('gfoot-tot').textContent  = fmt(tot);
+  document.getElementById('gfoot-paid').textContent = paidTot>0 ? fmt(paidTot)+' pagado' : '';
+
+  document.getElementById('prog-bar').style.width   = pctPaid+'%';
+  document.getElementById('prog-text').textContent  = paidN+' / '+gastos.length+' pagados ('+pctPaid+'%)';
+  document.getElementById('prog-paid').textContent  = fmt(paidTot);
+  document.getElementById('prog-pend').textContent  = fmt(pendTot);
+
+  updDonut(tots);
+}
+
+function updateAll(){ buildGastosList(); updStats(); updBars(); }
+
+/* ── GUARDAR ── */
+function saveData(silent=false){
+  localStorage.setItem('gastos', JSON.stringify(gastos));
+  localStorage.setItem('bases',  JSON.stringify(bv));
+  if(!silent){
+    const b=document.getElementById('savebtn');
+    b.textContent='✓ Guardado'; b.style.background='#3ecfa8'; b.style.color='#0f1117';
+    setTimeout(()=>{ b.textContent='Guardar'; b.style.background=''; b.style.color=''; },2000);
+  }
+}
+
+/* ── COPIAR CBU ── */
+function copiarCBU(id,btn){
+  navigator.clipboard.writeText(document.getElementById(id).textContent.trim()).then(()=>{
+    const o=btn.textContent; btn.textContent='✓'; btn.style.background='#3ecfa8';
+    setTimeout(()=>{ btn.textContent=o; btn.style.background=''; },2000);
+  });
+}
+
+/* ── EXPORT CSV ── */
+function exportCSV(){
+  const mes  = getMesLabel();
+  const tots = calcIngTotals();
+  const ing  = tots.reduce((a,b)=>a+b,0);
+  const tot  = gastos.reduce((a,b)=>a+b.val,0);
+  const paid = gastos.filter(g=>g.paid).reduce((a,b)=>a+b.val,0);
+  const rows = [];
+
+  rows.push(['DASHBOARD FINANCIERO - '+mes]);
+  rows.push(['Ingresos y Gastos · Ignacio A. Pringles']);
+  rows.push([]);
+  rows.push(['RESUMEN']);
+  rows.push(['Ingresos netos', Math.round(ing)]);
+  rows.push(['Gastos del mes', Math.round(tot)]);
+  rows.push(['Ahorro neto',    Math.round(ing-tot)]);
+  rows.push(['Total pagado',   Math.round(paid)]);
+  rows.push(['Total pendiente',Math.round(tot-paid)]);
+  rows.push([]);
+  rows.push(['INGRESOS POR FUENTE',...ING_COLS]);
+  rows.push(['Base',...bv.map(v=>Math.round(v))]);
+  ING_ROWS.forEach(r=>rows.push([r.label,...bv.map((b,c)=>Math.round(r.fn(b,c)))]));
+  rows.push(['Total neto',...calcIngTotals().map(v=>Math.round(v))]);
+  rows.push([]);
+  [...gastos].sort((a,b)=>b.val-a.val).forEach(g=>{
+    const info=CBU_INFO[g.label];
+    rows.push([g.label, Math.round(g.val), g.paid?'PAGADO':'PENDIENTE', info?info.cbu:'']);
+  });
+  rows.push(['TOTAL', Math.round(tot), '', Math.round(paid)+' pagado']);
+
+  const csv = rows.map(r=>r.map(c=>{
+    const s=String(c==null?'':c);
+    return s.includes(',')||s.includes('"')?`"${s.replace(/"/g,'""')}"`  :s;
+  }).join(',')).join('\n');
+
+  const blob = new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href=url; a.download='dashboard_'+mes.replace(' ','_')+'.csv';
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+
+/* ── VISA PDF ANALYZER ── */
+const VISA_COLORS = ['#4f8ef7','#3ecfa8','#f7a24f','#e96caa','#a78bf7',
+                     '#7bc8f7','#f7d24f','#a78bf7','#3ecfa8','#f7514f',
+                     '#4f8ef7','#3ecfa8','#f7a24f','#e96caa','#a78bf7'];
+
+async function handleVisaFile(file){
+  if(!file) return;
+  if(file.type !== 'application/pdf'){
+    showVisaError('Solo se aceptan archivos PDF.');
+    return;
+  }
+  document.getElementById('visa-filename').textContent = '📎 ' + file.name;
+  document.getElementById('visa-status').style.display    = 'flex';
+  document.getElementById('visa-result-ars').style.display = 'none';
+  document.getElementById('visa-result-usd').style.display = 'none';
+  document.getElementById('visa-error').style.display      = 'none';
+
+  try {
+    const b64 = await new Promise((res,rej)=>{
+      const r = new FileReader();
+      r.onload  = ()=> res(r.result.split(',')[1]);
+      r.onerror = ()=> rej(new Error('Error al leer el archivo'));
+      r.readAsDataURL(file);
+    });
+
+    // ── ANÁLISIS PESOS ──
+    document.getElementById('visa-status-txt').textContent = 'Analizando gastos en pesos...';
+    const resARS = await callVisaAPI(b64,
+      `Analizá este resumen de tarjeta Visa Santander.
+Identificá TODOS los gastos en PESOS ARGENTINOS (ignorá dólares).
+
+Agrupalos por rubro similar. En el nombre del grupo indicá el rubro y entre paréntesis los comercios principales que acumulaste. Ejemplos de formato:
+- "Supermercados (Carrefour, Coto, Día)"
+- "Combustible (YPF, Shell)"
+- "Restaurantes y delivery (McDonald's, Rappi, PedidosYa)"
+- "Farmacia (Farmacity, Dr. Ahorro)"
+- "Servicios (Telecom, Edenor)"
+- "Indumentaria (Zara, Adidas)"
+- "Entretenimiento (Netflix, Spotify)"
+Si un comercio no encaja en ningún grupo claro, agrupalo en "Otros" con sus nombres entre paréntesis.
+
+Para cada grupo: sumá el total y contá las transacciones.
+Respondé ÚNICAMENTE con JSON válido sin texto extra ni markdown:
+{"total":99999.99,"grupos":[{"concepto":"Rubro (comercios)","total":9999.99,"cantidad":3}]}
+Ordená de mayor a menor. Punto como separador decimal.`);
+    renderVisaResult(resARS, 'ars');
+
+    // ── ANÁLISIS DÓLARES ──
+    document.getElementById('visa-status-txt').textContent = 'Analizando gastos en dólares...';
+    const resUSD = await callVisaAPI(b64,
+      `Analizá este resumen de tarjeta Visa Santander.
+Identificá TODOS los gastos en DÓLARES (ignorá pesos argentinos).
+
+Agrupalos por rubro similar. En el nombre del grupo indicá el rubro y entre paréntesis los servicios que acumulaste. Ejemplos:
+- "Streaming (Netflix, Spotify, Disney+)"
+- "Software y plataformas (Adobe, Google, Apple)"
+- "Compras internacionales (Amazon, eBay)"
+- "Publicidad digital (Meta Ads, Google Ads)"
+- "Otros servicios (nombres)"
+
+Para cada grupo: sumá el total en dólares y contá las transacciones.
+Respondé ÚNICAMENTE con JSON válido sin texto extra ni markdown:
+{"total":999.99,"grupos":[{"concepto":"Rubro (servicios)","total":99.99,"cantidad":2}]}
+Ordená de mayor a menor. Punto como separador decimal.`);
+    renderVisaResult(resUSD, 'usd');
+
+    document.getElementById('visa-status').style.display = 'none';
+
+  } catch(err){
+    document.getElementById('visa-status').style.display = 'none';
+    showVisaError(err.message || 'Error al procesar el PDF.');
+  }
+}
+
+async function callVisaAPI(b64, prompt){
+  const response = await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      model:'claude-sonnet-4-20250514',
+      max_tokens:4000,
+      messages:[{role:'user', content:[
+        {type:'document', source:{type:'base64', media_type:'application/pdf', data:b64}},
+        {type:'text', text:prompt}
+      ]}]
+    })
+  });
+  const data = await response.json();
+  if(!response.ok) throw new Error(data.error?.message || 'Error en la API');
+  const text = data.content.find(b=>b.type==='text')?.text || '';
+  try {
+    return JSON.parse(text.replace(/```json|```/g,'').trim());
+  } catch(e){
+    throw new Error('No se pudo interpretar la respuesta de la IA.');
+  }
+}
+
+function renderVisaResult(data, moneda){
+  const esUSD  = moneda === 'usd';
+  const grupos = (data.grupos || []).sort((a,b)=>b.total-a.total);
+  const total  = data.total || grupos.reduce((a,b)=>a+b.total,0);
+  const max    = grupos[0]?.total || 1;
+  const sym    = esUSD ? 'U$S ' : '$';
+  const fmtV   = v => sym + Math.abs(v).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const USD_GREENS = ['#3ecfa8','#2ab891','#1aa07a','#0d8862','#47d9b4','#25c99e','#15b085','#0a9870'];
+  const barColor = i => esUSD ? USD_GREENS[i % USD_GREENS.length] : VISA_COLORS[i % VISA_COLORS.length];
+
+  document.getElementById('visa-total-'+moneda).textContent = 'Total: ' + fmtV(total);
+  document.getElementById('visa-rows-'+moneda).innerHTML = grupos.map((g,i)=>{
+    const barW = (g.total/max*100).toFixed(1);
+    const pct  = (g.total/total*100).toFixed(1);
+    return `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)">
+      <span style="font-size:11px;color:var(--text3);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${g.concepto}">${g.concepto}</span>
+      <div style="width:80px;flex-shrink:0;height:12px;background:rgba(255,255,255,.04);border-radius:3px;overflow:hidden">
+        <div style="height:100%;border-radius:3px;background:${barColor(i)};width:${barW}%;transition:width .5s cubic-bezier(.4,0,.2,1)"></div>
+      </div>
+      <span style="font-size:10px;font-family:'DM Mono',monospace;color:var(--text3);width:34px;text-align:right;flex-shrink:0">${pct}%</span>
+      <span style="font-size:10px;font-family:'DM Mono',monospace;color:var(--text2);width:28px;text-align:center;flex-shrink:0">${g.cantidad}x</span>
+      <span style="font-size:11px;font-family:'DM Mono',monospace;color:${esUSD?'#3ecfa8':'var(--text)'};width:110px;text-align:right;flex-shrink:0">${fmtV(g.total)}</span>
+    </div>`;
+  }).join('') || '<p style="font-size:11px;color:var(--text3);padding:8px 0">No se encontraron gastos en esta moneda.</p>';
+
+  document.getElementById('visa-result-'+moneda).style.display = 'block';
+}
+
+function showVisaError(msg){
+  const el = document.getElementById('visa-error');
+  el.textContent = '⚠ ' + msg;
+  el.style.display = 'block';
+}
+
+
+buildIngBlock();
+updateAll();
+</script>
+</body>
+</html>

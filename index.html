@@ -325,6 +325,7 @@ const CBU_INFO = {
 };
 const GD_DEFAULT = [
   {label:'VISA Santander',    val:3900000,  paid:false},
+  {label:'AMEX Santander',    val:0,        paid:false},
   {label:'Well Fargo',        val:0,        paid:false},
   {label:'Sueldo Patricia',   val:141488,   paid:false},
   {label:'Pago Andrés García',val:225000,   paid:false},
@@ -340,7 +341,12 @@ const GD_DEFAULT = [
   {label:'ART Patricia',      val:8885,     paid:false},
   {label:'TAOS',              val:1231850,  paid:false},
   {label:'Cesar U$S 400',     val:650000,   paid:false},
-  {label:'Extra PATO',        val:70000,    paid:false}
+  {label:'Extra PATO',        val:70000,    paid:false},
+  {label:'Otros 1', val:0, paid:false, editable:true},
+  {label:'Otros 2', val:0, paid:false, editable:true},
+  {label:'Otros 3', val:0, paid:false, editable:true},
+  {label:'Otros 4', val:0, paid:false, editable:true},
+  {label:'Otros 5', val:0, paid:false, editable:true}
 ];
 const BV_DEFAULT = [15925223, 1381236, 4500000, 0, 16058];
 
@@ -475,10 +481,22 @@ function buildGastosList(){
     const tr = document.createElement('tr');
     tr.style.cssText = g.paid ? 'opacity:.6' : '';
 
-    // TD concepto: texto puro, no editable
+    // TD concepto: texto puro (fijo) o editable si g.editable
     const tdLabel = document.createElement('td');
-    tdLabel.style.cssText = 'padding:7px 0;font-size:13px;color:'+(g.paid?'var(--text3)':'var(--text2)')+';'+(g.paid?'text-decoration:line-through;':'')+'border-bottom:1px solid var(--border);user-select:none;pointer-events:none';
-    tdLabel.textContent = g.label;
+    tdLabel.style.cssText = 'padding:7px 0;border-bottom:1px solid var(--border)';
+    if(g.editable){
+      const lblInp = document.createElement('input');
+      lblInp.type = 'text';
+      lblInp.value = g.label;
+      lblInp.disabled = g.paid;
+      lblInp.style.cssText = 'background:transparent;border:none;border-bottom:1px dashed var(--border2);color:var(--text2);font-family:"DM Sans",sans-serif;font-size:13px;outline:none;width:100%;padding:0';
+      lblInp.addEventListener('focus', function(){ this.style.borderBottomColor='var(--accent)'; });
+      lblInp.addEventListener('blur',  function(){ this.style.borderBottomColor=''; if(this.value.trim()==='') this.value=gastos[i].label; else { gastos[i].label=this.value; saveData(true); } });
+      tdLabel.appendChild(lblInp);
+    } else {
+      tdLabel.style.cssText += ';font-size:13px;color:'+(g.paid?'var(--text3)':'var(--text2)')+(g.paid?';text-decoration:line-through':'')  +';user-select:none;pointer-events:none';
+      tdLabel.textContent = g.label;
+    }
 
     // TD importe: solo el input numérico
     const tdInput = document.createElement('td');
